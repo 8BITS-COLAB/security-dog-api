@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/ElioenaiFerrari/security-dog-api/factories"
-	"github.com/ElioenaiFerrari/security-dog-api/security"
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"gorm.io/gorm"
@@ -21,7 +21,7 @@ type Route struct {
 func InitV1(v1 *echo.Group, db *gorm.DB) {
 
 	var config = middleware.JWTConfig{
-		Claims:     &security.JwtClaims{},
+		Claims:     &jwt.StandardClaims{},
 		SigningKey: []byte(os.Getenv("JWT_SECRET")),
 	}
 
@@ -53,6 +53,12 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 		{
 			Func:        authController.Profile,
 			Path:        "/auth/profile",
+			Middlewares: []echo.MiddlewareFunc{middleware.JWTWithConfig(config)},
+			Method:      http.MethodGet,
+		},
+		{
+			Func:        authController.RefreshToken,
+			Path:        "/auth/refresh-token",
 			Middlewares: []echo.MiddlewareFunc{middleware.JWTWithConfig(config)},
 			Method:      http.MethodGet,
 		},

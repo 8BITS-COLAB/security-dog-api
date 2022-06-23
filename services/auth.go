@@ -2,14 +2,11 @@ package services
 
 import (
 	"errors"
-	"os"
-	"time"
 
 	"github.com/ElioenaiFerrari/security-dog-api/dtos"
 	"github.com/ElioenaiFerrari/security-dog-api/entities"
 	"github.com/ElioenaiFerrari/security-dog-api/security"
 	"github.com/andskur/argon2-hashing"
-	"github.com/golang-jwt/jwt"
 	"gorm.io/gorm"
 )
 
@@ -48,19 +45,7 @@ func (authService *AuthService) Signin(signinDTO *dtos.SigninDTO) (string, error
 		return "", err
 	}
 
-	claims := &security.JwtClaims{
-		UserName: user.UserName,
-		Role:     user.Role,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
-			Subject:   user.ID,
-			Issuer:    os.Getenv("JWT_ISSUER"),
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	signedToken, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	signedToken, err := security.GenToken(user.ID)
 
 	if err != nil {
 		return "", err

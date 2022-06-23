@@ -64,7 +64,7 @@ func (authController *AuthController) Signin(c echo.Context) error {
 
 func (authController *AuthController) Signout(c echo.Context) error {
 	currentUser := c.Get("user").(*jwt.Token)
-	claims := currentUser.Claims.(*security.JwtClaims)
+	claims := currentUser.Claims.(*jwt.StandardClaims)
 
 	remoteIP := c.QueryParam("remote_ip")
 
@@ -81,7 +81,7 @@ func (authController *AuthController) Signout(c echo.Context) error {
 
 func (authController *AuthController) Profile(c echo.Context) error {
 	currentUser := c.Get("user").(*jwt.Token)
-	claims := currentUser.Claims.(*security.JwtClaims)
+	claims := currentUser.Claims.(*jwt.StandardClaims)
 
 	user, err := authController.authService.Profile(claims.Subject)
 
@@ -90,4 +90,19 @@ func (authController *AuthController) Profile(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, user)
+}
+
+func (authController *AuthController) RefreshToken(c echo.Context) error {
+	currentUser := c.Get("user").(*jwt.Token)
+	claims := currentUser.Claims.(*jwt.StandardClaims)
+
+	token, err := security.GenToken(claims.Subject)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"token": token,
+	})
 }
