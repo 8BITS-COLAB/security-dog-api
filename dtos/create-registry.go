@@ -9,6 +9,7 @@ type CreateRegistryDTO struct {
 	Name     string `json:"name"`
 	Login    string `json:"login"`
 	Password string `json:"password"`
+	SiteURL  string `json:"site_url"`
 }
 
 func (createRegistryDTO *CreateRegistryDTO) Validate() error {
@@ -26,6 +27,10 @@ func (createRegistryDTO *CreateRegistryDTO) Validate() error {
 
 	if createRegistryDTO.Password == "" {
 		return errors.New("password is required")
+	}
+
+	if createRegistryDTO.SiteURL == "" {
+		return errors.New("site_url is required")
 	}
 
 	return nil

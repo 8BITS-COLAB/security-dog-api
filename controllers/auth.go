@@ -6,7 +6,6 @@ import (
 	"github.com/ElioenaiFerrari/security-dog-api/dtos"
 	"github.com/ElioenaiFerrari/security-dog-api/security"
 	"github.com/ElioenaiFerrari/security-dog-api/services"
-	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 )
 
@@ -51,20 +50,19 @@ func (authController *AuthController) Signin(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	token, err := authController.authService.Signin(&signinDTO)
+	accessToken, err := authController.authService.Signin(&signinDTO)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
-		"token": token,
+		"access_token": accessToken,
 	})
 }
 
 func (authController *AuthController) Signout(c echo.Context) error {
-	currentUser := c.Get("user").(*jwt.Token)
-	claims := currentUser.Claims.(*jwt.StandardClaims)
+	claims := security.Claims(c)
 
 	remoteIP := c.QueryParam("remote_ip")
 
@@ -80,8 +78,7 @@ func (authController *AuthController) Signout(c echo.Context) error {
 }
 
 func (authController *AuthController) Profile(c echo.Context) error {
-	currentUser := c.Get("user").(*jwt.Token)
-	claims := currentUser.Claims.(*jwt.StandardClaims)
+	claims := security.Claims(c)
 
 	user, err := authController.authService.Profile(claims.Subject)
 
@@ -93,16 +90,24 @@ func (authController *AuthController) Profile(c echo.Context) error {
 }
 
 func (authController *AuthController) RefreshToken(c echo.Context) error {
-	currentUser := c.Get("user").(*jwt.Token)
-	claims := currentUser.Claims.(*jwt.StandardClaims)
+	claims := security.Claims(c)
 
-	token, err := security.GenToken(claims.Subject)
+	accessToken, err := security.GenToken(claims.UserName, claims.Email, claims.Role, claims.Subject)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
-		"token": token,
+		"access_token": accessToken,
 	})
+}
+
+func (authController *AuthController) CSRFToken(c echo.Context) error {
+	csrf := c.Get("csrf")
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"csrf_token": csrf.(string),
+	})
+
 }

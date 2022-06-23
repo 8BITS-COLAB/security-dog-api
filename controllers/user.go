@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ElioenaiFerrari/security-dog-api/dtos"
+	"github.com/ElioenaiFerrari/security-dog-api/security"
 	"github.com/ElioenaiFerrari/security-dog-api/services"
 	"github.com/labstack/echo/v4"
 )
@@ -17,6 +18,12 @@ func NewUserController(userService *services.UserService) *UserController {
 }
 
 func (userController *UserController) Index(c echo.Context) error {
+	claims := security.Claims(c)
+
+	if claims.Role != "admin" {
+		return echo.NewHTTPError(http.StatusForbidden, "You are not authorized to list users")
+	}
+
 	users, err := userController.userService.GetAll()
 
 	if err != nil {
@@ -27,7 +34,13 @@ func (userController *UserController) Index(c echo.Context) error {
 }
 
 func (userController *UserController) Show(c echo.Context) error {
+	claims := security.Claims(c)
+
 	id := c.Param("id")
+
+	if claims.Role != "admin" && claims.Subject != id {
+		return echo.NewHTTPError(http.StatusForbidden, "You are not authorized to see this user")
+	}
 
 	user, err := userController.userService.GetByID(id)
 
@@ -39,7 +52,13 @@ func (userController *UserController) Show(c echo.Context) error {
 }
 
 func (userController *UserController) Update(c echo.Context) error {
+	claims := security.Claims(c)
+
 	id := c.Param("id")
+
+	if claims.Subject != id {
+		return echo.NewHTTPError(http.StatusForbidden, "You are not authorized to update this user")
+	}
 
 	var updateUserDTO dtos.UpdateUserDTO
 
@@ -61,7 +80,13 @@ func (userController *UserController) Update(c echo.Context) error {
 }
 
 func (userController *UserController) Delete(c echo.Context) error {
+	claims := security.Claims(c)
+
 	id := c.Param("id")
+
+	if claims.Subject != id {
+		return echo.NewHTTPError(http.StatusForbidden, "You are not authorized to delete this user")
+	}
 
 	err := userController.userService.Delete(id)
 

@@ -1,10 +1,9 @@
 package services
 
 import (
-	"fmt"
-
 	"github.com/ElioenaiFerrari/security-dog-api/dtos"
 	"github.com/ElioenaiFerrari/security-dog-api/entities"
+	"github.com/ElioenaiFerrari/security-dog-api/views"
 	"gorm.io/gorm"
 )
 
@@ -16,7 +15,9 @@ func NewUserService(db *gorm.DB) *UserService {
 	return &UserService{db: db}
 }
 
-func (userService *UserService) Create(createUserDTO *dtos.CreateUserDTO) (entities.User, error) {
+func (userService *UserService) Create(createUserDTO *dtos.CreateUserDTO) (views.UserView, error) {
+	var userView views.UserView
+
 	user := entities.User{
 		UserName: createUserDTO.UserName,
 		Password: createUserDTO.Password,
@@ -24,27 +25,27 @@ func (userService *UserService) Create(createUserDTO *dtos.CreateUserDTO) (entit
 		Role:     createUserDTO.Role,
 	}
 
-	if err := userService.db.Create(&user).Error; err != nil {
-		return user, err
+	if err := userService.db.Create(&user).Scan(&userView).Error; err != nil {
+		return userView, err
 	}
 
-	return user, nil
+	return userView, nil
 }
 
-func (userService *UserService) GetAll() ([]entities.User, error) {
-	var users []entities.User
+func (userService *UserService) GetAll() ([]views.UserView, error) {
+	var users []views.UserView
 
-	if err := userService.db.Find(&users).Error; err != nil {
+	if err := userService.db.Model(entities.User{}).Find(&users).Error; err != nil {
 		return users, err
 	}
 
 	return users, nil
 }
 
-func (userService *UserService) GetByID(id string) (entities.User, error) {
-	var user entities.User
+func (userService *UserService) GetByID(id string) (views.UserView, error) {
+	var user views.UserView
 
-	if err := userService.db.First(&user, "id = ?", id).Error; err != nil {
+	if err := userService.db.Model(entities.User{}).First(&user, "id = ?", id).Error; err != nil {
 		return user, err
 	}
 
@@ -61,11 +62,12 @@ func (userService *UserService) GetByEmail(email string) (entities.User, error) 
 	return user, nil
 }
 
-func (userService *UserService) Update(id string, updateUserDTO *dtos.UpdateUserDTO) (entities.User, error) {
+func (userService *UserService) Update(id string, updateUserDTO *dtos.UpdateUserDTO) (views.UserView, error) {
+	var userView views.UserView
 	var user entities.User
 
-	if _, err := userService.GetByID(id); err != nil {
-		return user, err
+	if err := userService.db.Where("id = ?", id).First(&user).Error; err != nil {
+		return userView, err
 	}
 
 	user.UserName = updateUserDTO.UserName
@@ -73,12 +75,11 @@ func (userService *UserService) Update(id string, updateUserDTO *dtos.UpdateUser
 	user.Email = updateUserDTO.Email
 	user.Role = updateUserDTO.Role
 
-	if err := userService.db.Model(user).Where("id = ?", id).Updates(&user).Error; err != nil {
-		fmt.Println(err)
-		return user, err
+	if err := userService.db.Updates(&user).Scan(&userView).Error; err != nil {
+		return userView, err
 	}
 
-	return user, nil
+	return userView, nil
 }
 
 func (userService *UserService) Delete(id string) error {

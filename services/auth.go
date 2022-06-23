@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"github.com/ElioenaiFerrari/security-dog-api/dtos"
-	"github.com/ElioenaiFerrari/security-dog-api/entities"
 	"github.com/ElioenaiFerrari/security-dog-api/security"
+	"github.com/ElioenaiFerrari/security-dog-api/views"
 	"github.com/andskur/argon2-hashing"
 	"gorm.io/gorm"
 )
@@ -20,7 +20,7 @@ func NewAuthService(db *gorm.DB, userService *UserService, deviceService *Device
 	return &AuthService{db: db, userService: userService, deviceService: deviceService}
 }
 
-func (authService *AuthService) Signup(createUserDTO *dtos.CreateUserDTO) (entities.User, error) {
+func (authService *AuthService) Signup(createUserDTO *dtos.CreateUserDTO) (views.UserView, error) {
 	user, err := authService.userService.Create(createUserDTO)
 
 	if err != nil {
@@ -45,7 +45,7 @@ func (authService *AuthService) Signin(signinDTO *dtos.SigninDTO) (string, error
 		return "", err
 	}
 
-	signedToken, err := security.GenToken(user.ID)
+	signedToken, err := security.GenToken(user.UserName, user.Email, user.Role, user.ID)
 
 	if err != nil {
 		return "", err
@@ -68,7 +68,7 @@ func (authService *AuthService) Signout(userID string, remoteIP string) error {
 	return nil
 }
 
-func (authService *AuthService) Profile(userID string) (entities.User, error) {
+func (authService *AuthService) Profile(userID string) (views.UserView, error) {
 	user, err := authService.userService.GetByID(userID)
 
 	if err != nil {

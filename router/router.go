@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/ElioenaiFerrari/security-dog-api/factories"
-	"github.com/golang-jwt/jwt"
+	"github.com/ElioenaiFerrari/security-dog-api/security"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"gorm.io/gorm"
@@ -20,9 +20,15 @@ type Route struct {
 
 func InitV1(v1 *echo.Group, db *gorm.DB) {
 	var config = middleware.JWTConfig{
-		Claims:     &jwt.StandardClaims{},
+		Claims:     &security.JwtClaims{},
 		SigningKey: []byte(os.Getenv("JWT_SECRET")),
 	}
+
+	auth := middleware.JWTWithConfig(config)
+	csrf := middleware.CSRFWithConfig(middleware.CSRFConfig{
+		TokenLookup: "header:" + echo.HeaderXCSRFToken,
+		ContextKey:  "csrf",
+	})
 
 	authController := factories.MakeAuthController(db)
 	userController := factories.MakeUserController(db)
@@ -44,29 +50,41 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 			Method:      http.MethodPost,
 		},
 		{
-			Func:        authController.Signout,
-			Path:        "/auth/signout",
-			Middlewares: []echo.MiddlewareFunc{middleware.JWTWithConfig(config)},
-			Method:      http.MethodGet,
+			Func: authController.Signout,
+			Path: "/auth/signout",
+			Middlewares: []echo.MiddlewareFunc{
+				auth,
+				csrf,
+			},
+			Method: http.MethodGet,
 		},
 		{
 			Func:        authController.Profile,
 			Path:        "/auth/profile",
-			Middlewares: []echo.MiddlewareFunc{middleware.JWTWithConfig(config)},
+			Middlewares: []echo.MiddlewareFunc{auth},
 			Method:      http.MethodGet,
 		},
 		{
 			Func:        authController.RefreshToken,
 			Path:        "/auth/refresh-token",
-			Middlewares: []echo.MiddlewareFunc{middleware.JWTWithConfig(config)},
+			Middlewares: []echo.MiddlewareFunc{auth},
 			Method:      http.MethodGet,
+		},
+		{
+			Func: authController.CSRFToken,
+			Path: "/auth/csrf-token",
+			Middlewares: []echo.MiddlewareFunc{
+				auth,
+				csrf,
+			},
+			Method: http.MethodGet,
 		},
 		// Users
 		{
 			Func: userController.Index,
 			Path: "/users",
 			Middlewares: []echo.MiddlewareFunc{
-				middleware.JWTWithConfig(config),
+				auth,
 			},
 			Method: http.MethodGet,
 		},
@@ -74,7 +92,7 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 			Func: userController.Show,
 			Path: "/users/:id",
 			Middlewares: []echo.MiddlewareFunc{
-				middleware.JWTWithConfig(config),
+				auth,
 			},
 			Method: http.MethodGet,
 		},
@@ -82,7 +100,8 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 			Func: userController.Update,
 			Path: "/users/:id",
 			Middlewares: []echo.MiddlewareFunc{
-				middleware.JWTWithConfig(config),
+				auth,
+				csrf,
 			},
 			Method: http.MethodPatch,
 		},
@@ -90,7 +109,8 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 			Func: userController.Delete,
 			Path: "/users/:id",
 			Middlewares: []echo.MiddlewareFunc{
-				middleware.JWTWithConfig(config),
+				auth,
+				csrf,
 			},
 			Method: http.MethodDelete,
 		},
@@ -99,7 +119,7 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 			Func: registryController.Index,
 			Path: "/users/:user_id/registries",
 			Middlewares: []echo.MiddlewareFunc{
-				middleware.JWTWithConfig(config),
+				auth,
 			},
 			Method: http.MethodGet,
 		},
@@ -107,7 +127,8 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 			Func: registryController.Create,
 			Path: "/users/:user_id/registries",
 			Middlewares: []echo.MiddlewareFunc{
-				middleware.JWTWithConfig(config),
+				auth,
+				csrf,
 			},
 			Method: http.MethodPost,
 		},
@@ -115,7 +136,7 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 			Func: registryController.Show,
 			Path: "/users/:user_id/registries/:id",
 			Middlewares: []echo.MiddlewareFunc{
-				middleware.JWTWithConfig(config),
+				auth,
 			},
 			Method: http.MethodGet,
 		},
@@ -123,7 +144,8 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 			Func: registryController.Update,
 			Path: "/users/:user_id/registries/:id",
 			Middlewares: []echo.MiddlewareFunc{
-				middleware.JWTWithConfig(config),
+				auth,
+				csrf,
 			},
 			Method: http.MethodPatch,
 		},
@@ -131,7 +153,8 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 			Func: registryController.Delete,
 			Path: "/users/:user_id/registries/:id",
 			Middlewares: []echo.MiddlewareFunc{
-				middleware.JWTWithConfig(config),
+				auth,
+				csrf,
 			},
 			Method: http.MethodDelete,
 		},
@@ -140,7 +163,7 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 			Func: deviceController.Index,
 			Path: "/users/:user_id/devices",
 			Middlewares: []echo.MiddlewareFunc{
-				middleware.JWTWithConfig(config),
+				auth,
 			},
 			Method: http.MethodGet,
 		},

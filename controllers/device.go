@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ElioenaiFerrari/security-dog-api/dtos"
+	"github.com/ElioenaiFerrari/security-dog-api/security"
 	"github.com/ElioenaiFerrari/security-dog-api/services"
 	"github.com/labstack/echo/v4"
 )
@@ -17,7 +18,13 @@ func NewDeviceController(deviceService *services.DeviceService) *DeviceControlle
 }
 
 func (deviceController *DeviceController) Index(c echo.Context) error {
+	claims := security.Claims(c)
+
 	userID := c.Param("user_id")
+
+	if claims.Subject != userID {
+		return echo.NewHTTPError(http.StatusForbidden, "You are not authorized to see this devices")
+	}
 
 	devices, err := deviceController.deviceService.GetAll(userID)
 
@@ -29,6 +36,8 @@ func (deviceController *DeviceController) Index(c echo.Context) error {
 }
 
 func (deviceController *DeviceController) Update(c echo.Context) error {
+	claims := security.Claims(c)
+
 	var updateDeviceDTO dtos.UpdateDeviceDTO
 
 	if err := c.Bind(&updateDeviceDTO); err != nil {
@@ -36,6 +45,14 @@ func (deviceController *DeviceController) Update(c echo.Context) error {
 	}
 
 	updateDeviceDTO.UserID = c.Param("user_id")
+
+	if err := updateDeviceDTO.Validate(); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if claims.Subject != updateDeviceDTO.UserID {
+		return echo.NewHTTPError(http.StatusForbidden, "You are not authorized to update this device")
+	}
 
 	device, err := deviceController.deviceService.Update(&updateDeviceDTO)
 

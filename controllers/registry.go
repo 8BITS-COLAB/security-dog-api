@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ElioenaiFerrari/security-dog-api/dtos"
+	"github.com/ElioenaiFerrari/security-dog-api/security"
 	"github.com/ElioenaiFerrari/security-dog-api/services"
 	"github.com/labstack/echo/v4"
 )
@@ -40,7 +41,13 @@ func (registryController *RegistryController) Create(c echo.Context) error {
 }
 
 func (registryController *RegistryController) Index(c echo.Context) error {
+	claims := security.Claims(c)
+
 	userID := c.Param("user_id")
+
+	if claims.Subject != userID {
+		return echo.NewHTTPError(http.StatusForbidden, "You are not authorized to see this registries")
+	}
 
 	registries, err := registryController.registryService.GetAll(userID)
 
@@ -52,8 +59,14 @@ func (registryController *RegistryController) Index(c echo.Context) error {
 }
 
 func (registryController *RegistryController) Show(c echo.Context) error {
+	claims := security.Claims(c)
+
 	userID := c.Param("user_id")
 	id := c.Param("id")
+
+	if claims.Subject != userID {
+		return echo.NewHTTPError(http.StatusForbidden, "You are not authorized to see this registry")
+	}
 
 	registry, err := registryController.registryService.GetByID(userID, id)
 
@@ -65,6 +78,8 @@ func (registryController *RegistryController) Show(c echo.Context) error {
 }
 
 func (registryController *RegistryController) Update(c echo.Context) error {
+	claims := security.Claims(c)
+
 	userID := c.Param("user_id")
 	id := c.Param("id")
 
@@ -78,6 +93,10 @@ func (registryController *RegistryController) Update(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
+	if claims.Subject != userID {
+		return echo.NewHTTPError(http.StatusForbidden, "You are not authorized to update this registry")
+	}
+
 	registry, err := registryController.registryService.Update(userID, id, &updateRegistryDTO)
 
 	if err != nil {
@@ -88,8 +107,14 @@ func (registryController *RegistryController) Update(c echo.Context) error {
 }
 
 func (registryController *RegistryController) Delete(c echo.Context) error {
+	claims := security.Claims(c)
+
 	userID := c.Param("user_id")
 	id := c.Param("id")
+
+	if claims.Subject != userID {
+		return echo.NewHTTPError(http.StatusForbidden, "You are not authorized to delete this registry")
+	}
 
 	err := registryController.registryService.Delete(userID, id)
 
