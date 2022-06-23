@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/ElioenaiFerrari/security-dog-api/entities"
+	"github.com/ElioenaiFerrari/security-dog-api/router"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -26,29 +26,10 @@ func main() {
 	db.AutoMigrate(&entities.User{})
 	db.AutoMigrate(&entities.Registry{})
 
-	user := entities.User{
-		UserName:   "Eli",
-		Email:      "elioenaiferrari@gmail.com",
-		Password:   "123456",
-		Role:       "admin",
-		Registries: []entities.Registry{},
-	}
-
-	db.Create(&user)
-
-	db.Create(&entities.Registry{
-		UserID:   user.ID,
-		Name:     "registry1",
-		Login:    "registry1",
-		Password: "123456",
-	})
-
-	db.Preload("Registries").Find(&user)
-
-	fmt.Println(user.Registries)
-
 	server := echo.New()
-	// v1 := server.Group("/api/v1")
+	v1 := server.Group("/api/v1")
+
+	router.InitV1(v1, db)
 
 	server.Use(middleware.Logger())
 	server.Use(middleware.Recover())
