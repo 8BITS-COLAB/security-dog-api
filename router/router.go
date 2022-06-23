@@ -19,7 +19,6 @@ type Route struct {
 }
 
 func InitV1(v1 *echo.Group, db *gorm.DB) {
-
 	var config = middleware.JWTConfig{
 		Claims:     &jwt.StandardClaims{},
 		SigningKey: []byte(os.Getenv("JWT_SECRET")),
@@ -30,7 +29,7 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 	registryController := factories.MakeRegistryController(db)
 	deviceController := factories.MakeDeviceController(db)
 
-	var Routes = []Route{
+	var routes = []Route{
 		// Auth
 		{
 			Func:        authController.Signup,
@@ -147,7 +146,7 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 		},
 	}
 
-	for _, route := range Routes {
+	for _, route := range routes {
 		v1.Add(route.Method, route.Path, route.Func, route.Middlewares...)
 	}
 
