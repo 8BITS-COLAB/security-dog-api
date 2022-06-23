@@ -4,7 +4,9 @@ import (
 	"net/http"
 
 	"github.com/ElioenaiFerrari/security-dog-api/dtos"
+	"github.com/ElioenaiFerrari/security-dog-api/security"
 	"github.com/ElioenaiFerrari/security-dog-api/services"
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 )
 
@@ -49,12 +51,43 @@ func (authController *AuthController) Signin(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	user, err := authController.authService.Signin(&signinDTO)
+	token, err := authController.authService.Signin(&signinDTO)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"token": token,
+	})
+}
+
+func (authController *AuthController) Signout(c echo.Context) error {
+	currentUser := c.Get("user").(*jwt.Token)
+	claims := currentUser.Claims.(*security.JwtClaims)
+
+	remoteIP := c.QueryParam("remote_ip")
+
+	if remoteIP == "" {
+		remoteIP = c.RealIP()
+	}
+
+	if err := authController.authService.Signout(claims.Subject, remoteIP); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
+func (authController *AuthController) Profile(c echo.Context) error {
+	currentUser := c.Get("user").(*jwt.Token)
+	claims := currentUser.Claims.(*security.JwtClaims)
+
+	user, err := authController.authService.Profile(claims.Subject)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, user)
-
 }

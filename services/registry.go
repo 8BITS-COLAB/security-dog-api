@@ -50,14 +50,17 @@ func (registryService *RegistryService) GetByID(userID, id string) (entities.Reg
 }
 
 func (registryService *RegistryService) Update(userID, id string, updateRegistryDTO *dtos.UpdateRegistryDTO) (entities.Registry, error) {
-	registry := entities.Registry{
-		UserID:   userID,
-		Name:     updateRegistryDTO.Name,
-		Login:    updateRegistryDTO.Login,
-		Password: updateRegistryDTO.Password,
+	var registry entities.Registry
+
+	if err := registryService.db.Where("user_id = ? AND id = ?", userID, id).First(&registry).Error; err != nil {
+		return registry, err
 	}
 
-	if err := registryService.db.Model(&registry).Where("id = ?", id).Updates(&registry).Error; err != nil {
+	registry.Name = updateRegistryDTO.Name
+	registry.Login = updateRegistryDTO.Login
+	registry.Password = updateRegistryDTO.Password
+
+	if err := registryService.db.Updates(&registry).Error; err != nil {
 		return registry, err
 	}
 
