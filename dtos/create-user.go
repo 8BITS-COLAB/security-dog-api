@@ -27,5 +27,9 @@ func (createUserDTO CreateUserDTO) Validate() error {
 		return errors.New("role is required")
 	}
 
+	if createUserDTO.Role != "admin" && createUserDTO.Role != "user" {
+		return errors.New("role must be admin or user")
+	}
+
 	return nil
 }

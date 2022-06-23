@@ -9,11 +9,11 @@ import (
 )
 
 type AuthController struct {
-	userService *services.UserService
+	authService *services.AuthService
 }
 
-func NewAuthController(userService *services.UserService) *AuthController {
-	return &AuthController{userService: userService}
+func NewAuthController(authService *services.AuthService) *AuthController {
+	return &AuthController{authService: authService}
 }
 
 func (authController *AuthController) Signup(c echo.Context) error {
@@ -27,11 +27,32 @@ func (authController *AuthController) Signup(c echo.Context) error {
 		return err
 	}
 
-	user, err := authController.userService.Create(&createUserDTO)
+	user, err := authController.authService.Signup(&createUserDTO)
 
 	if err != nil {
 		return err
 	}
 
 	return c.JSON(http.StatusCreated, user)
+}
+
+func (authController *AuthController) Signin(c echo.Context) error {
+	var signinDTO dtos.SigninDTO
+
+	if err := c.Bind(&signinDTO); err != nil {
+		return err
+	}
+
+	if err := signinDTO.Validate(); err != nil {
+		return err
+	}
+
+	user, err := authController.authService.Signin(&signinDTO)
+
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, user)
+
 }

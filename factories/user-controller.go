@@ -8,5 +8,6 @@ import (
 
 func MakeUserController(db *gorm.DB) *controllers.UserController {
 	userService := services.NewUserService(db)
+
 	return controllers.NewUserController(userService)
 }

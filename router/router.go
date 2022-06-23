@@ -27,6 +27,12 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 			Method:      http.MethodPost,
 		},
 		{
+			Func:        authController.Signin,
+			Path:        "/auth/signin",
+			Middlewares: []echo.MiddlewareFunc{},
+			Method:      http.MethodPost,
+		},
+		{
 			Func:        userController.Index,
 			Path:        "/users",
 			Middlewares: []echo.MiddlewareFunc{},

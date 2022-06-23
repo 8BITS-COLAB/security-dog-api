@@ -38,3 +38,45 @@ func (userService *UserService) GetAll() ([]entities.User, error) {
 
 	return users, nil
 }
+
+func (userService *UserService) GetByID(id string) (entities.User, error) {
+	var user entities.User
+
+	if err := userService.db.First(&user, id).Error; err != nil {
+		return user, err
+	}
+
+	return user, nil
+}
+
+func (userService *UserService) GetByEmail(email string) (entities.User, error) {
+	var user entities.User
+
+	if err := userService.db.Where("email = ?", email).First(&user).Error; err != nil {
+		return user, err
+	}
+
+	return user, nil
+}
+
+func (userService *UserService) Update(id string, updateUserDTO *dtos.UpdateUserDTO) (entities.User, error) {
+	var user entities.User
+
+	userService.db.Model(&user).Updates(updateUserDTO)
+
+	return user, nil
+}
+
+func (userService *UserService) Delete(id string) error {
+	var user entities.User
+
+	if err := userService.db.First(&user, id).Error; err != nil {
+		return err
+	}
+
+	if err := userService.db.Delete(&user).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
