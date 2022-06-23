@@ -25,10 +25,7 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 	}
 
 	auth := middleware.JWTWithConfig(config)
-	csrf := middleware.CSRFWithConfig(middleware.CSRFConfig{
-		TokenLookup: "header:" + echo.HeaderXCSRFToken,
-		ContextKey:  "csrf",
-	})
+	csrf := middleware.CSRF()
 
 	authController := factories.MakeAuthController(db)
 	userController := factories.MakeUserController(db)

@@ -3,6 +3,7 @@ package services
 import (
 	"github.com/ElioenaiFerrari/security-dog-api/dtos"
 	"github.com/ElioenaiFerrari/security-dog-api/entities"
+	"github.com/ElioenaiFerrari/security-dog-api/providers"
 	"github.com/ElioenaiFerrari/security-dog-api/views"
 	"gorm.io/gorm"
 )
@@ -33,8 +34,13 @@ func (registryService *RegistryService) Create(createRegistryDTO *dtos.CreateReg
 
 func (registryService *RegistryService) GetAll(userID string) ([]views.RegistryView, error) {
 	var registriesView []views.RegistryView
+	var registries []entities.Registry
 
-	if err := registryService.db.Where("user_id = ?", userID).Find(&entities.Registry{}).Scan(&registriesView).Error; err != nil {
+	if err := registryService.db.Where("user_id = ?", userID).Find(&registries).Error; err != nil {
+		return registriesView, err
+	}
+
+	if err := providers.PutView(&registries, &registriesView); err != nil {
 		return registriesView, err
 	}
 
