@@ -1,6 +1,8 @@
 package services
 
 import (
+	"fmt"
+
 	"github.com/ElioenaiFerrari/security-dog-api/dtos"
 	"github.com/ElioenaiFerrari/security-dog-api/entities"
 	"gorm.io/gorm"
@@ -42,7 +44,7 @@ func (userService *UserService) GetAll() ([]entities.User, error) {
 func (userService *UserService) GetByID(id string) (entities.User, error) {
 	var user entities.User
 
-	if err := userService.db.First(&user, id).Error; err != nil {
+	if err := userService.db.First(&user, "id = ?", id).Error; err != nil {
 		return user, err
 	}
 
@@ -62,7 +64,21 @@ func (userService *UserService) GetByEmail(email string) (entities.User, error) 
 func (userService *UserService) Update(id string, updateUserDTO *dtos.UpdateUserDTO) (entities.User, error) {
 	var user entities.User
 
-	userService.db.Model(&user).Updates(updateUserDTO)
+	user, err := userService.GetByID(id)
+
+	if err != nil {
+		return user, err
+	}
+
+	user.UserName = updateUserDTO.UserName
+	user.Password = updateUserDTO.Password
+	user.Email = updateUserDTO.Email
+	user.Role = updateUserDTO.Role
+
+	if err := userService.db.Updates(&user).Error; err != nil {
+		fmt.Println(err)
+		return user, err
+	}
 
 	return user, nil
 }
@@ -70,7 +86,7 @@ func (userService *UserService) Update(id string, updateUserDTO *dtos.UpdateUser
 func (userService *UserService) Delete(id string) error {
 	var user entities.User
 
-	if err := userService.db.First(&user, id).Error; err != nil {
+	if _, err := userService.GetByID(id); err != nil {
 		return err
 	}
 

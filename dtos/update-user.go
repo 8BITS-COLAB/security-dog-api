@@ -10,7 +10,7 @@ type UpdateUserDTO struct {
 }
 
 func (updateUserDTO UpdateUserDTO) Validate() error {
-	if updateUserDTO.Role != "admin" && updateUserDTO.Role != "user" {
+	if updateUserDTO.Role != "" && updateUserDTO.Role != "admin" && updateUserDTO.Role != "user" {
 		return errors.New("role must be admin or user")
 	}
 

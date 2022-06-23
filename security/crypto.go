@@ -8,7 +8,6 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"errors"
-	"fmt"
 )
 
 func PrivateKeyFromString(privateKey string) (*rsa.PrivateKey, error) {
@@ -63,7 +62,6 @@ func Decrypt(privateKey *rsa.PrivateKey, cipherText string) (string, error) {
 	)
 
 	if err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 

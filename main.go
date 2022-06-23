@@ -36,7 +36,7 @@ func main() {
 	server.Use(middleware.CORS())
 	server.Use(middleware.Gzip())
 	server.Use(middleware.Secure())
-	server.Use(middleware.CSRF())
+	// server.Use(middleware.CSRF())
 
 	server.Logger.Fatal(server.Start(":4000"))
 }

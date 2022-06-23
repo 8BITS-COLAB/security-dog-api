@@ -20,6 +20,7 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 	userController := factories.MakeUserController(db)
 
 	var Routes = []Route{
+		// Auth
 		{
 			Func:        authController.Signup,
 			Path:        "/auth/signup",
@@ -32,11 +33,30 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 			Middlewares: []echo.MiddlewareFunc{},
 			Method:      http.MethodPost,
 		},
+		// Users
 		{
 			Func:        userController.Index,
 			Path:        "/users",
 			Middlewares: []echo.MiddlewareFunc{},
 			Method:      http.MethodGet,
+		},
+		{
+			Func:        userController.Show,
+			Path:        "/users/:id",
+			Middlewares: []echo.MiddlewareFunc{},
+			Method:      http.MethodGet,
+		},
+		{
+			Func:        userController.Update,
+			Path:        "/users/:id",
+			Middlewares: []echo.MiddlewareFunc{},
+			Method:      http.MethodPatch,
+		},
+		{
+			Func:        userController.Delete,
+			Path:        "/users/:id",
+			Middlewares: []echo.MiddlewareFunc{},
+			Method:      http.MethodDelete,
 		},
 	}
 
