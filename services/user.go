@@ -62,20 +62,14 @@ func (userService *UserService) GetByEmail(email string) (entities.User, error) 
 }
 
 func (userService *UserService) Update(id string, updateUserDTO *dtos.UpdateUserDTO) (entities.User, error) {
-	var user entities.User
-
-	user, err := userService.GetByID(id)
-
-	if err != nil {
-		return user, err
+	user := entities.User{
+		UserName: updateUserDTO.UserName,
+		Password: updateUserDTO.Password,
+		Email:    updateUserDTO.Email,
+		Role:     updateUserDTO.Role,
 	}
 
-	user.UserName = updateUserDTO.UserName
-	user.Password = updateUserDTO.Password
-	user.Email = updateUserDTO.Email
-	user.Role = updateUserDTO.Role
-
-	if err := userService.db.Updates(&user).Error; err != nil {
+	if err := userService.db.Model(user).Where("id = ?", id).Updates(&user).Error; err != nil {
 		fmt.Println(err)
 		return user, err
 	}

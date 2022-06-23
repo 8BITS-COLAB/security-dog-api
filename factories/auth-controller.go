@@ -8,7 +8,8 @@ import (
 
 func MakeAuthController(db *gorm.DB) *controllers.AuthController {
 	userService := services.NewUserService(db)
-	authService := services.NewAuthService(db, userService)
+	deviceService := services.NewDeviceService(db)
+	authService := services.NewAuthService(db, userService, deviceService)
 
 	return controllers.NewAuthController(authService)
 }

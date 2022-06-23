@@ -25,6 +25,7 @@ func main() {
 
 	db.AutoMigrate(&entities.User{})
 	db.AutoMigrate(&entities.Registry{})
+	db.AutoMigrate(&entities.Device{})
 
 	server := echo.New()
 	v1 := server.Group("/api/v1")

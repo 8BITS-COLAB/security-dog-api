@@ -5,6 +5,7 @@ import "errors"
 type SigninDTO struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	RemoteIP string `json:"remote_ip"`
 }
 
 func (signinDTO SigninDTO) Validate() error {

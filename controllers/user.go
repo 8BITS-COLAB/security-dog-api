@@ -20,7 +20,7 @@ func (userController *UserController) Index(c echo.Context) error {
 	users, err := userController.userService.GetAll()
 
 	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, users)
@@ -32,7 +32,7 @@ func (userController *UserController) Show(c echo.Context) error {
 	user, err := userController.userService.GetByID(id)
 
 	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, user)
@@ -44,17 +44,17 @@ func (userController *UserController) Update(c echo.Context) error {
 	var updateUserDTO dtos.UpdateUserDTO
 
 	if err := c.Bind(&updateUserDTO); err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	if err := updateUserDTO.Validate(); err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	user, err := userController.userService.Update(id, &updateUserDTO)
 
 	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, user)
@@ -66,7 +66,7 @@ func (userController *UserController) Delete(c echo.Context) error {
 	err := userController.userService.Delete(id)
 
 	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.NoContent(http.StatusNoContent)
