@@ -70,7 +70,7 @@ func (registryService *RegistryService) Update(userID, id string, updateRegistry
 	registry.Password = updateRegistryDTO.Password
 	registry.SiteURL = updateRegistryDTO.SiteURL
 
-	if err := registryService.db.Updates(&registry).Scan(&registryView).Error; err != nil {
+	if err := registryService.db.UpdateColumns(&registry).Scan(&registryView).Error; err != nil {
 		return registryView, err
 	}
 

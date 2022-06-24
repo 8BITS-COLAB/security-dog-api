@@ -8,6 +8,7 @@ import (
 	"github.com/ElioenaiFerrari/security-dog-api/security"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/patrickmn/go-cache"
 	"gorm.io/gorm"
 )
 
@@ -18,7 +19,7 @@ type Route struct {
 	Method      string
 }
 
-func InitV1(v1 *echo.Group, db *gorm.DB) {
+func InitV1(v1 *echo.Group, memory *cache.Cache, db *gorm.DB) {
 	var config = middleware.JWTConfig{
 		Claims:     &security.JwtClaims{},
 		SigningKey: []byte(os.Getenv("JWT_SECRET")),
@@ -31,6 +32,7 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 	userController := factories.MakeUserController(db)
 	registryController := factories.MakeRegistryController(db)
 	deviceController := factories.MakeDeviceController(db)
+	sharedRegistryController := factories.MakeSharedRegistryController(memory, db)
 
 	var routes = []Route{
 		// Auth
@@ -45,15 +47,6 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 			Path:        "/auth/signin",
 			Middlewares: []echo.MiddlewareFunc{},
 			Method:      http.MethodPost,
-		},
-		{
-			Func: authController.Signout,
-			Path: "/auth/signout",
-			Middlewares: []echo.MiddlewareFunc{
-				auth,
-				// csrf,
-			},
-			Method: http.MethodGet,
 		},
 		{
 			Func:        authController.Profile,
@@ -163,6 +156,30 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 				auth,
 			},
 			Method: http.MethodGet,
+		},
+		{
+			Func: deviceController.Update,
+			Path: "/users/:user_id/devices",
+			Middlewares: []echo.MiddlewareFunc{
+				auth,
+			},
+			Method: http.MethodPatch,
+		},
+		// Shared registries
+		{
+			Func:        sharedRegistryController.Show,
+			Path:        "/shared-registries/:id",
+			Middlewares: []echo.MiddlewareFunc{},
+			Method:      http.MethodGet,
+		},
+		{
+			Func: sharedRegistryController.Create,
+			Path: "/users/:user_id/shared-registries",
+			Middlewares: []echo.MiddlewareFunc{
+				auth,
+				// csrf,
+			},
+			Method: http.MethodPost,
 		},
 	}
 

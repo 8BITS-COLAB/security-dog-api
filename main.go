@@ -2,12 +2,14 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"github.com/ElioenaiFerrari/security-dog-api/entities"
 	"github.com/ElioenaiFerrari/security-dog-api/router"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/patrickmn/go-cache"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -30,7 +32,9 @@ func main() {
 	server := echo.New()
 	v1 := server.Group("/api/v1")
 
-	router.InitV1(v1, db)
+	memory := cache.New(time.Minute, time.Minute)
+
+	router.InitV1(v1, memory, db)
 
 	server.Use(middleware.Logger())
 	server.Use(middleware.Recover())

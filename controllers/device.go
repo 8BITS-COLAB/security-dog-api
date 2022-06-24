@@ -45,6 +45,7 @@ func (deviceController *DeviceController) Update(c echo.Context) error {
 	}
 
 	updateDeviceDTO.UserID = c.Param("user_id")
+	updateDeviceDTO.RemoteIP = c.QueryParam("remote_ip")
 
 	if err := updateDeviceDTO.Validate(); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())

@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/ElioenaiFerrari/security-dog-api/dtos"
+	"github.com/ElioenaiFerrari/security-dog-api/entities"
 	"github.com/ElioenaiFerrari/security-dog-api/security"
 	"github.com/ElioenaiFerrari/security-dog-api/views"
 	"github.com/andskur/argon2-hashing"
@@ -17,7 +18,11 @@ type AuthService struct {
 }
 
 func NewAuthService(db *gorm.DB, userService *UserService, deviceService *DeviceService) *AuthService {
-	return &AuthService{db: db, userService: userService, deviceService: deviceService}
+	return &AuthService{
+		db:            db,
+		userService:   userService,
+		deviceService: deviceService,
+	}
 }
 
 func (authService *AuthService) Signup(createUserDTO *dtos.CreateUserDTO) (views.UserView, error) {
@@ -30,42 +35,28 @@ func (authService *AuthService) Signup(createUserDTO *dtos.CreateUserDTO) (views
 	return user, nil
 }
 
-func (authService *AuthService) Signin(signinDTO *dtos.SigninDTO) (string, error) {
+func (authService *AuthService) Signin(signinDTO *dtos.SigninDTO) (string, entities.User, error) {
 	user, err := authService.userService.GetByEmail(signinDTO.Email)
 
 	if err != nil {
-		return "", err
+		return "", user, err
 	}
 
 	if err := argon2.CompareHashAndPassword([]byte(user.Password), []byte(signinDTO.Password)); err != nil {
-		return "", errors.New("invalid password")
+		return "", user, errors.New("invalid password")
 	}
 
 	if _, err = authService.deviceService.Add(user.ID, signinDTO.RemoteIP); err != nil {
-		return "", err
+		return "", user, err
 	}
 
-	signedToken, err := security.GenToken(user.UserName, user.Email, user.Role, user.ID)
+	accessToken, err := security.GenToken(user.UserName, user.Email, user.Role, user.ID)
 
 	if err != nil {
-		return "", err
+		return "", user, err
 	}
 
-	return signedToken, nil
-}
-
-func (authService *AuthService) Signout(userID string, remoteIP string) error {
-	_, err := authService.deviceService.Update(&dtos.UpdateDeviceDTO{
-		UserID:   userID,
-		RemoteIP: remoteIP,
-		IsLinked: false,
-	})
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return accessToken, user, nil
 }
 
 func (authService *AuthService) Profile(userID string) (views.UserView, error) {
@@ -76,4 +67,26 @@ func (authService *AuthService) Profile(userID string) (views.UserView, error) {
 	}
 
 	return user, nil
+}
+
+func (authService *AuthService) ValidateDevice(userID string, remoteIP string) error {
+	device, err := authService.deviceService.GetByRemoteIP(userID, remoteIP)
+
+	if err != nil {
+		return err
+	}
+
+	if !device.IsLinked {
+		return errors.New("device is not linked")
+	}
+
+	if !device.IsTrusted {
+		return errors.New("device is not trusted")
+	}
+
+	if device.IsBlocked {
+		return errors.New("device is blocked")
+	}
+
+	return nil
 }

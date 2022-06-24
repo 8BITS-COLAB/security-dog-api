@@ -26,6 +26,7 @@ func (deviceService *DeviceService) Add(userID, remoteIP string) (views.DeviceVi
 			device.UserID = userID
 			device.RemoteIP = remoteIP
 			device.IsLinked = true
+			device.IsTrusted = true
 
 			if err := deviceService.db.Create(&device).Scan(&deviceView).Error; err != nil {
 				return deviceView, err
@@ -36,8 +37,9 @@ func (deviceService *DeviceService) Add(userID, remoteIP string) (views.DeviceVi
 		}
 	} else {
 		device.IsLinked = true
+		device.IsTrusted = true
 
-		if err := deviceService.db.Updates(&device).Scan(&deviceView).Error; err != nil {
+		if err := deviceService.db.UpdateColumns(&device).Scan(&deviceView).Error; err != nil {
 			return deviceView, err
 		}
 
@@ -56,17 +58,27 @@ func (deviceService *DeviceService) GetAll(userID string) ([]views.DeviceView, e
 }
 
 func (deviceService *DeviceService) Update(updateDeviceDTO *dtos.UpdateDeviceDTO) (entities.Device, error) {
-	device := entities.Device{}
+	var device entities.Device
 
 	if err := deviceService.db.Where("user_id = ? AND remote_ip = ?", updateDeviceDTO.UserID, updateDeviceDTO.RemoteIP).First(&device).Error; err != nil {
 		return device, err
 	}
 
-	device.IsLinked = updateDeviceDTO.IsLinked
-	device.IsTrusted = updateDeviceDTO.IsTrusted
-	device.IsBlocked = updateDeviceDTO.IsBlocked
+	if err := deviceService.db.Model(&device).UpdateColumns(map[string]interface{}{
+		"is_linked":  updateDeviceDTO.IsLinked,
+		"is_trusted": updateDeviceDTO.IsTrusted,
+		"is_blocked": updateDeviceDTO.IsBlocked,
+	}).Error; err != nil {
+		return device, err
+	}
 
-	if err := deviceService.db.Updates(&device).Error; err != nil {
+	return device, nil
+}
+
+func (deviceService *DeviceService) GetByRemoteIP(userID, remoteIP string) (entities.Device, error) {
+	var device entities.Device
+
+	if err := deviceService.db.Where("user_id = ? AND remote_ip = ?", userID, remoteIP).First(&device).Error; err != nil {
 		return device, err
 	}
 

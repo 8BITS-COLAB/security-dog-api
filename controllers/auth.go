@@ -51,31 +51,19 @@ func (authController *AuthController) Signin(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	accessToken, err := authController.authService.Signin(&signinDTO)
+	accessToken, user, err := authController.authService.Signin(&signinDTO)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
+	if err := authController.authService.ValidateDevice(user.ID, signinDTO.RemoteIP); err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+	}
+
 	return c.JSON(http.StatusOK, map[string]string{
 		"access_token": accessToken,
 	})
-}
-
-func (authController *AuthController) Signout(c echo.Context) error {
-	claims := security.Claims(c)
-
-	remoteIP := c.QueryParam("remote_ip")
-
-	if remoteIP == "" {
-		remoteIP = c.RealIP()
-	}
-
-	if err := authController.authService.Signout(claims.Subject, remoteIP); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
-	return c.NoContent(http.StatusOK)
 }
 
 func (authController *AuthController) Profile(c echo.Context) error {
@@ -92,6 +80,12 @@ func (authController *AuthController) Profile(c echo.Context) error {
 
 func (authController *AuthController) RefreshToken(c echo.Context) error {
 	claims := security.Claims(c)
+
+	remoteIP := c.RealIP()
+
+	if err := authController.authService.ValidateDevice(claims.Subject, remoteIP); err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+	}
 
 	accessToken, err := security.GenToken(claims.UserName, claims.Email, claims.Role, claims.Subject)
 

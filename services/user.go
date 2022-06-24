@@ -75,7 +75,7 @@ func (userService *UserService) Update(id string, updateUserDTO *dtos.UpdateUser
 	user.Email = updateUserDTO.Email
 	user.Role = updateUserDTO.Role
 
-	if err := userService.db.Updates(&user).Scan(&userView).Error; err != nil {
+	if err := userService.db.UpdateColumns(&user).Scan(&userView).Error; err != nil {
 		return userView, err
 	}
 

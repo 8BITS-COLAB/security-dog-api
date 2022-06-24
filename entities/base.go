@@ -15,7 +15,7 @@ type Base struct {
 }
 
 func (base *Base) BeforeSave(tx *gorm.DB) (err error) {
-	base.ID = uuid.New().String()
+	base.ID = uuid.NewString()
 
 	return
 }
