@@ -49,8 +49,13 @@ func (registryService *RegistryService) GetAll(userID string) ([]views.RegistryV
 
 func (registryService *RegistryService) GetByID(userID, id string) (views.RegistryView, error) {
 	var registryView views.RegistryView
+	var registry entities.Registry
 
-	if err := registryService.db.Where("user_id = ? AND id = ?", userID, id).First(&entities.Registry{}).Scan(&registryView).Error; err != nil {
+	if err := registryService.db.Where("user_id = ? AND id = ?", userID, id).First(&registry).Error; err != nil {
+		return registryView, err
+	}
+
+	if err := providers.PutView(&registry, &registryView); err != nil {
 		return registryView, err
 	}
 
