@@ -2,6 +2,8 @@ package services
 
 import (
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/ElioenaiFerrari/security-dog-api/dtos"
 	"github.com/ElioenaiFerrari/security-dog-api/entities"
@@ -32,21 +34,37 @@ func (sharedRegistryService *SharedRegistryService) Create(createSharedRegistryD
 	sharedRegistry.ID = uuid.NewString()
 	sharedRegistry.UserID = createSharedRegistryDTO.UserID
 	sharedRegistry.RegistryID = createSharedRegistryDTO.RegistryID
-	sharedRegistry.ExpireAt = createSharedRegistryDTO.ExpireAt
 	sharedRegistry.Password = string(hash)
 
-	if err := sharedRegistryService.db.Add(sharedRegistry.ID, sharedRegistry, sharedRegistry.ExpireAt); err != nil {
-		return sharedRegistry, err
+	switch createSharedRegistryDTO.ExpireAt {
+	case "1m":
+		sharedRegistry.ExpireAt = time.Minute
+	case "5m":
+		sharedRegistry.ExpireAt = time.Minute * 5
+	case "30m":
+		sharedRegistry.ExpireAt = time.Minute * 30
+	case "1h":
+		sharedRegistry.ExpireAt = time.Hour
+	case "6h":
+		sharedRegistry.ExpireAt = time.Hour * 6
+	case "1d":
+		sharedRegistry.ExpireAt = time.Hour * 24
+	default:
+		sharedRegistry.ExpireAt = time.Minute * 5
 	}
+
+	fmt.Println(sharedRegistry)
+
+	sharedRegistryService.db.Set(sharedRegistry.ID, sharedRegistry, sharedRegistry.ExpireAt)
 
 	return sharedRegistry, nil
 }
 
 func (sharedRegistryService *SharedRegistryService) GetByID(id, password string) (views.RegistryView, error) {
 	var registryView views.RegistryView
-	sharedRegistry, _ := sharedRegistryService.db.Get(id)
+	sharedRegistry, found := sharedRegistryService.db.Get(id)
 
-	if sharedRegistry == nil {
+	if !found {
 		return registryView, errors.New("shared registry not found")
 	}
 

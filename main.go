@@ -32,7 +32,7 @@ func main() {
 	server := echo.New()
 	v1 := server.Group("/api/v1")
 
-	memory := cache.New(time.Minute, time.Minute)
+	memory := cache.New(time.Minute, time.Minute*15)
 
 	router.InitV1(v1, memory, db)
 
