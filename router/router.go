@@ -25,7 +25,7 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 	}
 
 	auth := middleware.JWTWithConfig(config)
-	csrf := middleware.CSRF()
+	// csrf := middleware.CSRF()
 
 	authController := factories.MakeAuthController(db)
 	userController := factories.MakeUserController(db)
@@ -51,7 +51,7 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 			Path: "/auth/signout",
 			Middlewares: []echo.MiddlewareFunc{
 				auth,
-				csrf,
+				// csrf,
 			},
 			Method: http.MethodGet,
 		},
@@ -72,7 +72,7 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 			Path: "/auth/csrf-token",
 			Middlewares: []echo.MiddlewareFunc{
 				auth,
-				csrf,
+				// csrf,
 			},
 			Method: http.MethodGet,
 		},
@@ -98,7 +98,7 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 			Path: "/users/:id",
 			Middlewares: []echo.MiddlewareFunc{
 				auth,
-				csrf,
+				// csrf,
 			},
 			Method: http.MethodPatch,
 		},
@@ -107,7 +107,7 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 			Path: "/users/:id",
 			Middlewares: []echo.MiddlewareFunc{
 				auth,
-				csrf,
+				// csrf,
 			},
 			Method: http.MethodDelete,
 		},
@@ -125,7 +125,7 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 			Path: "/users/:user_id/registries",
 			Middlewares: []echo.MiddlewareFunc{
 				auth,
-				csrf,
+				// csrf,
 			},
 			Method: http.MethodPost,
 		},
@@ -142,7 +142,7 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 			Path: "/users/:user_id/registries/:id",
 			Middlewares: []echo.MiddlewareFunc{
 				auth,
-				csrf,
+				// csrf,
 			},
 			Method: http.MethodPatch,
 		},
@@ -151,7 +151,7 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 			Path: "/users/:user_id/registries/:id",
 			Middlewares: []echo.MiddlewareFunc{
 				auth,
-				csrf,
+				// csrf,
 			},
 			Method: http.MethodDelete,
 		},

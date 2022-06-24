@@ -7,6 +7,7 @@ import (
 	"github.com/ElioenaiFerrari/security-dog-api/security"
 	"github.com/ElioenaiFerrari/security-dog-api/services"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 type AuthController struct {
@@ -104,7 +105,7 @@ func (authController *AuthController) RefreshToken(c echo.Context) error {
 }
 
 func (authController *AuthController) CSRFToken(c echo.Context) error {
-	csrf := c.Get("csrf")
+	csrf := c.Get(middleware.DefaultCSRFConfig.ContextKey)
 
 	return c.JSON(http.StatusOK, map[string]string{
 		"csrf_token": csrf.(string),
