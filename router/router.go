@@ -33,6 +33,7 @@ func InitV1(v1 *echo.Group, memory *cache.Cache, db *gorm.DB) {
 	registryController := factories.MakeRegistryController(db)
 	deviceController := factories.MakeDeviceController(db)
 	sharedRegistryController := factories.MakeSharedRegistryController(memory, db)
+	detectiveController := factories.MakeDetectiveController()
 
 	var routes = []Route{
 		// Auth
@@ -180,6 +181,15 @@ func InitV1(v1 *echo.Group, memory *cache.Cache, db *gorm.DB) {
 				// csrf,
 			},
 			Method: http.MethodPost,
+		},
+		// Detective
+		{
+			Func: detectiveController.Investigate,
+			Path: "/detective",
+			Middlewares: []echo.MiddlewareFunc{
+				auth,
+			},
+			Method: http.MethodGet,
 		},
 	}
 

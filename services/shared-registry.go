@@ -2,7 +2,6 @@ package services
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/ElioenaiFerrari/security-dog-api/dtos"
@@ -52,8 +51,6 @@ func (sharedRegistryService *SharedRegistryService) Create(createSharedRegistryD
 	default:
 		sharedRegistry.ExpireAt = time.Minute * 5
 	}
-
-	fmt.Println(sharedRegistry)
 
 	sharedRegistryService.db.Set(sharedRegistry.ID, sharedRegistry, sharedRegistry.ExpireAt)
 
