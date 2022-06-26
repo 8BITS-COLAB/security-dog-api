@@ -17,8 +17,8 @@ type SharedRegistryService struct {
 	registryService *RegistryService
 }
 
-func NewSharedRegistryService(db *cache.Cache, registryService *RegistryService) *SharedRegistryService {
-	return &SharedRegistryService{db: db, registryService: registryService}
+func NewSharedRegistryService(registryService *RegistryService) *SharedRegistryService {
+	return &SharedRegistryService{db: cache.New(time.Minute, time.Minute*15), registryService: registryService}
 }
 
 func (sharedRegistryService *SharedRegistryService) Create(createSharedRegistryDTO *dtos.CreateSharedRegistryDTO) (entities.SharedRegistry, error) {
