@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/ElioenaiFerrari/security-dog-api/dtos"
@@ -44,6 +45,8 @@ func (authController *AuthController) Signin(c echo.Context) error {
 	if err := c.Bind(&signinDTO); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+
+	fmt.Println(signinDTO)
 
 	signinDTO.RemoteIP = c.RealIP()
 

@@ -15,16 +15,18 @@ func NewDeviceService(db *gorm.DB) *DeviceService {
 	return &DeviceService{db: db}
 }
 
-func (deviceService *DeviceService) Add(userID, remoteIP string) (views.DeviceView, error) {
+func (deviceService *DeviceService) Add(userID string, signinDTO *dtos.SigninDTO) (views.DeviceView, error) {
 	var device entities.Device
 	var deviceView views.DeviceView
 
-	if err := deviceService.db.Where("user_id = ? AND remote_ip = ?", userID, remoteIP).First(&device).Scan(&deviceView).Error; err != nil {
+	if err := deviceService.db.Where("user_id = ? AND remote_ip = ?", userID, signinDTO.RemoteIP).First(&device).Scan(&deviceView).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return deviceView, err
 		} else {
 			device.UserID = userID
-			device.RemoteIP = remoteIP
+			device.RemoteIP = signinDTO.RemoteIP
+			device.Lat = signinDTO.Geo.Lat
+			device.Lng = signinDTO.Geo.Lng
 			device.IsLinked = true
 			device.IsTrusted = true
 
@@ -38,6 +40,8 @@ func (deviceService *DeviceService) Add(userID, remoteIP string) (views.DeviceVi
 	} else {
 		device.IsLinked = true
 		device.IsTrusted = true
+		device.Lat = signinDTO.Geo.Lat
+		device.Lng = signinDTO.Geo.Lng
 
 		if err := deviceService.db.UpdateColumns(&device).Scan(&deviceView).Error; err != nil {
 			return deviceView, err

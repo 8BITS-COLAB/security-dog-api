@@ -46,7 +46,7 @@ func (authService *AuthService) Signin(signinDTO *dtos.SigninDTO) (string, entit
 		return "", user, errors.New("invalid password")
 	}
 
-	if _, err = authService.deviceService.Add(user.ID, signinDTO.RemoteIP); err != nil {
+	if _, err = authService.deviceService.Add(user.ID, signinDTO); err != nil {
 		return "", user, err
 	}
 

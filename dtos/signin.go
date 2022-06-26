@@ -6,6 +6,10 @@ type SigninDTO struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 	RemoteIP string `json:"remote_ip"`
+	Geo      struct {
+		Lat float64 `json:"lat"`
+		Lng float64 `json:"lng"`
+	} `json:"geo"`
 }
 
 func (signinDTO SigninDTO) Validate() error {
