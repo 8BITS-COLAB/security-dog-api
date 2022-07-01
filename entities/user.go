@@ -6,6 +6,7 @@ import (
 
 	"github.com/ElioenaiFerrari/security-dog-api/security"
 	"github.com/andskur/argon2-hashing"
+	"github.com/xlzd/gotp"
 	"gorm.io/gorm"
 )
 
@@ -17,8 +18,10 @@ type User struct {
 	Password   string     `json:"password"`
 	Role       string     `json:"role"`
 	PrivateKey string     `json:"private_key"`
+	SecretKey  string     `json:"secret_key"`
 	Registries []Registry `json:"registries" gorm:"foreignKey:user_id"`
 	Devices    []Device   `json:"devices" gorm:"foreignKey:user_id"`
+	Has2FA     bool       `json:"has_2fa"`
 }
 
 func (user *User) BeforeCreate(tx *gorm.DB) (err error) {
@@ -42,6 +45,7 @@ func (user *User) BeforeCreate(tx *gorm.DB) (err error) {
 
 	user.Password = string(hash)
 	user.PrivateKey = string(block)
+	user.SecretKey = gotp.RandomSecret(16)
 
 	return err
 }

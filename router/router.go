@@ -61,6 +61,12 @@ func InitV1(v1 *echo.Group, db *gorm.DB) {
 			Method:      http.MethodGet,
 		},
 		{
+			Func:        authController.TwoFA,
+			Path:        "/auth/2fa",
+			Middlewares: []echo.MiddlewareFunc{auth},
+			Method:      http.MethodGet,
+		},
+		{
 			Func: authController.CSRFToken,
 			Path: "/auth/csrf-token",
 			Middlewares: []echo.MiddlewareFunc{

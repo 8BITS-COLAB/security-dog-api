@@ -101,6 +101,39 @@ func (authController *AuthController) RefreshToken(c echo.Context) error {
 	})
 }
 
+func (authController *AuthController) TwoFA(c echo.Context) error {
+	action := c.QueryParam("action")
+	claims := security.Claims(c)
+
+	switch action {
+	case "qr_code":
+		qrCode, err := authController.authService.TwoFAQRCode(claims.Subject)
+
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+
+		return c.JSON(http.StatusOK, map[string]string{
+			"qr_code": qrCode,
+		})
+	case "validate_code":
+		code := c.QueryParam("code")
+
+		isValid := authController.authService.TwoFAValidateCode(claims.Subject, code)
+
+		if !isValid {
+			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid code")
+		}
+
+		return c.JSON(http.StatusOK, map[string]string{
+			"message": "Code validated successfully",
+		})
+
+	default:
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid action")
+	}
+}
+
 func (authController *AuthController) CSRFToken(c echo.Context) error {
 	csrf := c.Get(middleware.DefaultCSRFConfig.ContextKey)
 

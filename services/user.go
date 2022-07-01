@@ -42,14 +42,15 @@ func (userService *UserService) GetAll() ([]views.UserView, error) {
 	return users, nil
 }
 
-func (userService *UserService) GetByID(id string) (views.UserView, error) {
-	var user views.UserView
+func (userService *UserService) GetByID(id string) (views.UserView, string, error) {
+	var user entities.User
+	var userView views.UserView
 
-	if err := userService.db.Model(entities.User{}).First(&user, "id = ?", id).Error; err != nil {
-		return user, err
+	if err := userService.db.First(&user, "id = ?", id).Scan(&userView).Error; err != nil {
+		return userView, user.SecretKey, err
 	}
 
-	return user, nil
+	return userView, user.SecretKey, nil
 }
 
 func (userService *UserService) GetByEmail(email string) (entities.User, error) {
@@ -85,7 +86,7 @@ func (userService *UserService) Update(id string, updateUserDTO *dtos.UpdateUser
 func (userService *UserService) Delete(id string) error {
 	var user entities.User
 
-	if _, err := userService.GetByID(id); err != nil {
+	if _, _, err := userService.GetByID(id); err != nil {
 		return err
 	}
 

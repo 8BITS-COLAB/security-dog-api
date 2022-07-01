@@ -2,12 +2,14 @@ package services
 
 import (
 	"errors"
+	"os"
 
 	"github.com/ElioenaiFerrari/security-dog-api/dtos"
 	"github.com/ElioenaiFerrari/security-dog-api/entities"
 	"github.com/ElioenaiFerrari/security-dog-api/security"
 	"github.com/ElioenaiFerrari/security-dog-api/views"
 	"github.com/andskur/argon2-hashing"
+	"github.com/xlzd/gotp"
 	"gorm.io/gorm"
 )
 
@@ -60,13 +62,38 @@ func (authService *AuthService) Signin(signinDTO *dtos.SigninDTO) (string, entit
 }
 
 func (authService *AuthService) Profile(userID string) (views.UserView, error) {
-	user, err := authService.userService.GetByID(userID)
+	user, _, err := authService.userService.GetByID(userID)
 
 	if err != nil {
 		return user, err
 	}
 
 	return user, nil
+}
+
+func (authService *AuthService) TwoFAQRCode(userID string) (string, error) {
+	user, secretKey, err := authService.userService.GetByID(userID)
+
+	if err != nil {
+		return "", err
+	}
+
+	totp := gotp.NewDefaultTOTP(secretKey)
+
+	return totp.ProvisioningUri(user.Email, os.Getenv("JWT_ISSUER")), nil
+
+}
+
+func (authService *AuthService) TwoFAValidateCode(userID, code string) bool {
+	_, secretKey, err := authService.userService.GetByID(userID)
+
+	if err != nil {
+		return false
+	}
+
+	totp := gotp.NewDefaultTOTP(secretKey)
+
+	return totp.Verify(code, 0)
 }
 
 func (authService *AuthService) ValidateDevice(userID string, remoteIP string) error {

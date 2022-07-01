@@ -42,7 +42,7 @@ func (userController *UserController) Show(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusForbidden, "You are not authorized to see this user")
 	}
 
-	user, err := userController.userService.GetByID(id)
+	user, _, err := userController.userService.GetByID(id)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
